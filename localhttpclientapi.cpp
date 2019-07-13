@@ -3,10 +3,11 @@
 LocalHTTPClientAPI::LocalHTTPClientAPI(const QString &serverHostUrl, const QString &code):
     rootDomain(serverHostUrl),userCode(code)
 {
-    nAccessManager = new QNetworkAccessManager();
-    connect(nAccessManager,&QNetworkAccessManager::sslErrors,this,&LocalHTTPClientAPI::handleSslErrors);
+    qNAM = new QNetworkAccessManager();
+    connect(qNAM,&QNetworkAccessManager::sslErrors,this,&LocalHTTPClientAPI::handleSslErrors);
 
     qRegisterMetaType<HTTPObject>("HTTPObject");
+
 }
 
 void LocalHTTPClientAPI::printSslInformation()
@@ -26,31 +27,28 @@ void LocalHTTPClientAPI::sendGetRequest(const QString &method, const QString &ur
         return;
     }
 
-    QString rDomain;
+    QString fullServerUrl;
     if(rootDomain != QString())
-        rDomain = rootDomain;
+        fullServerUrl = rootDomain;
     else
         return;
 
-    if(rDomain.at(rDomain.length() - 1) != '/')
-        rDomain.append('/');
+    if(fullServerUrl.at(fullServerUrl.length() - 1) != '/')
+        fullServerUrl.append('/');
 
-    QString codePart;
+    fullServerUrl += method;
 
     if(userCode != QString())
-        codePart = "?code=" + userCode;
+        fullServerUrl += "?code=" + userCode;
 
     if(urlParameter != QString() && userCode == QString())
-        codePart += "?";
+        fullServerUrl += "?" + urlParameter;
     else if(urlParameter != QString())
-        codePart += "&";
-
-
-    QString fullServerUrl = rootDomain + method + codePart + urlParameter;
+        fullServerUrl += "&" + urlParameter;
 
     print(fullServerUrl);
 
-    tempReply = nAccessManager->get(QNetworkRequest(QUrl(fullServerUrl)));
+    tempReply = qNAM->get(QNetworkRequest(QUrl(fullServerUrl)));
 
     connect(tempReply,&QNetworkReply::finished,this,&LocalHTTPClientAPI::handleReply);
     connect(tempReply,&QNetworkReply::finished,tempReply,&QNetworkReply::deleteLater);
@@ -82,7 +80,44 @@ void LocalHTTPClientAPI::sendPostRequest(const QString &method, const QJsonObjec
     QNetworkRequest req(serverUrl);
 
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    tempReply = nAccessManager->post(req,QJsonDocument(JSON).toJson());
+    tempReply = qNAM->post(req,QJsonDocument(JSON).toJson());
+
+    connect(tempReply,&QNetworkReply::finished,this,&LocalHTTPClientAPI::handleReply);
+    connect(tempReply,&QNetworkReply::finished,tempReply,&QNetworkReply::deleteLater);
+}
+
+void LocalHTTPClientAPI::sendDeleteRequest(const QString &method, const QString &urlParameter)
+{
+    if(!_isBusy)
+        _isBusy = true;
+    else
+    {
+        emit sendErrorString("Client is busy. Awaiting response from server.");
+        return;
+    }
+
+    QString fullServerUrl;
+    if(rootDomain != QString())
+        fullServerUrl = rootDomain;
+    else
+        return;
+
+    if(fullServerUrl.at(fullServerUrl.length() - 1) != '/')
+        fullServerUrl.append('/');
+
+    fullServerUrl += method;
+
+    if(userCode != QString())
+        fullServerUrl += "?code=" + userCode;
+
+    if(userCode == QString())
+        fullServerUrl += "?" + urlParameter;
+    else
+        fullServerUrl += "&" + urlParameter;
+
+    print(fullServerUrl);
+
+    tempReply = qNAM->deleteResource(QNetworkRequest(QUrl(fullServerUrl)));
 
     connect(tempReply,&QNetworkReply::finished,this,&LocalHTTPClientAPI::handleReply);
     connect(tempReply,&QNetworkReply::finished,tempReply,&QNetworkReply::deleteLater);

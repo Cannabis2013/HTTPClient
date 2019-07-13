@@ -21,6 +21,7 @@ public:
                         const QString &urlParameter = QString());
     void sendPostRequest(const QString &method,
                           const QJsonObject JSON);
+    void sendDeleteRequest(const QString &method, const QString &urlParameter);
 
     QString getRootDomain() const;
 
@@ -41,7 +42,7 @@ private slots:
     void handleRedirection(const QUrl &url);
 private:
 
-    QNetworkAccessManager* nAccessManager;
+    QNetworkAccessManager* qNAM;
     QNetworkReply* tempReply;
     QString rootDomain;
     QString userCode;
