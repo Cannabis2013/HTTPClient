@@ -24,27 +24,17 @@ void LocalHTTPClientAPI::sendGetRequest(const QString &method, const QString &ur
     else
     {
         emit sendErrorString("Client is busy. Awaiting response from server.");
-        return;
+        throw overflow_error("Client is busy and awaiting response from an unresolved request");
     }
 
     QString fullServerUrl;
-    if(rootDomain != QString())
-        fullServerUrl = rootDomain;
-    else
+
+    try {
+        processAndAssembleUrl(fullServerUrl,method,urlParameter);
+    } catch (invalid_argument e) {
+        print(e.what());
         return;
-
-    if(fullServerUrl.at(fullServerUrl.length() - 1) != '/')
-        fullServerUrl.append('/');
-
-    fullServerUrl += method;
-
-    if(userCode != QString())
-        fullServerUrl += "?code=" + userCode;
-
-    if(urlParameter != QString() && userCode == QString())
-        fullServerUrl += "?" + urlParameter;
-    else if(urlParameter != QString())
-        fullServerUrl += "&" + urlParameter;
+    }
 
     print(fullServerUrl);
 
@@ -97,23 +87,12 @@ void LocalHTTPClientAPI::sendDeleteRequest(const QString &method, const QString 
     }
 
     QString fullServerUrl;
-    if(rootDomain != QString())
-        fullServerUrl = rootDomain;
-    else
+    try {
+        processAndAssembleUrl(fullServerUrl,method,urlParameter);
+    } catch (invalid_argument e) {
+        print(e.what());
         return;
-
-    if(fullServerUrl.at(fullServerUrl.length() - 1) != '/')
-        fullServerUrl.append('/');
-
-    fullServerUrl += method;
-
-    if(userCode != QString())
-        fullServerUrl += "?code=" + userCode;
-
-    if(userCode == QString())
-        fullServerUrl += "?" + urlParameter;
-    else
-        fullServerUrl += "&" + urlParameter;
+    }
 
     print(fullServerUrl);
 
@@ -128,15 +107,15 @@ void LocalHTTPClientAPI::handleReply()
     QByteArray data = tempReply->readAll();
     HTTPObject object(data);
 
-    if(tempReply->error())
-    {
-        print("(Failed) Data:" + tempReply->errorString());
-        emit sendErrorString(tempReply->errorString());
-    }
-    else
+    if(!tempReply->error())
     {
         print("(Succes) Data:" + QString::fromStdString(data.toStdString()));
         emit sendHTTPObject(object);
+    }
+    else
+    {
+        print("(Failed) Data:" + tempReply->errorString());
+        emit sendErrorString(tempReply->errorString());
     }
 
     _isBusy = false;
@@ -158,6 +137,27 @@ void LocalHTTPClientAPI::handleRedirection(const QUrl &url)
 {
     QString string = url.toString();
     print("Redirection url: " + string);
+}
+
+void LocalHTTPClientAPI::processAndAssembleUrl(QString &hostUrl, QString methodName, QString urlParameter)
+{
+    if(rootDomain != QString())
+        hostUrl = rootDomain;
+    else
+        throw invalid_argument("Host url not valid or not set");
+
+    if(hostUrl.at(hostUrl.length() - 1) != '/')
+        hostUrl.append('/');
+
+    if(methodName.at(methodName.length() - 1) != '/')
+        methodName.append('/');
+
+    methodName += urlParameter;
+
+    hostUrl += methodName;
+
+    if(userCode != QString())
+        hostUrl += "?code=" + userCode;
 }
 
 bool LocalHTTPClientAPI::isBusy() const

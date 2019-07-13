@@ -22,7 +22,9 @@ int main(int argc, char *argv[])
     if(!QSslSocket::supportsSsl())
         return -1;
 
-    httpClient.sendGetRequest("GetTournaments");
+    httpClient.sendGetRequest("GetTournament","ac164aa6-63ac-47ff-acc8-c0ba4014e901");
+
+    //httpClient.sendGetRequest("GetTournaments");
 
     return a.exec();
 }

@@ -6,6 +6,8 @@
 #include <QNetworkReply>
 #include <qnetworkconfiguration.h>
 #include <qlist.h>
+#include <qtimer.h>
+#include <QTime>
 
 #include "httpobject.h"
 #include "myobject.h"
@@ -42,10 +44,15 @@ private slots:
     void handleRedirection(const QUrl &url);
 private:
 
+    void processAndAssembleUrl(QString &hostUrl, QString methodName, QString urlParameter);
+
     QNetworkAccessManager* qNAM;
     QNetworkReply* tempReply;
     QString rootDomain;
     QString userCode;
+
+    QTimer timer;
+    QTime responseTimer;
     bool _isBusy = false;
 };
 

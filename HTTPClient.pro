@@ -37,8 +37,7 @@ HEADERS += \
         localhttpclientapi.h \
         myobject.h
 
-FORMS += \
-        mainwindow.ui
+FORMS +=
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
