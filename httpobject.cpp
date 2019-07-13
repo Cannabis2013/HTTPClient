@@ -1,5 +1,9 @@
 #include "httpobject.h"
 
+HTTPObject::HTTPObject()
+{
+}
+
 HTTPObject::HTTPObject(const QByteArray &data)
 {
     _data = data;

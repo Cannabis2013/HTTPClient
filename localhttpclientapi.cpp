@@ -6,7 +6,7 @@ LocalHTTPClientAPI::LocalHTTPClientAPI(const QString &serverHostUrl, const QStri
     nAccessManager = new QNetworkAccessManager();
     connect(nAccessManager,&QNetworkAccessManager::sslErrors,this,&LocalHTTPClientAPI::handleSslErrors);
 
-    qRegisterMetaType<HTTPObject>("HTTPObjectReply");
+    qRegisterMetaType<HTTPObject>("HTTPObject");
 }
 
 void LocalHTTPClientAPI::printSslInformation()

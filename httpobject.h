@@ -9,6 +9,7 @@
 class HTTPObject
 {
 public:
+    HTTPObject();
     HTTPObject(const QByteArray &data);
 
     enum objectType {Object,Array};
